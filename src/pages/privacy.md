@@ -8,7 +8,7 @@ path: /privacy/
 
 # Privacy Policy
 
-<p class="meta">Last updated: 24 October 2026</p>
+<p class="meta">Last updated: 24 October 2026 · <a href="/de/privacy/" lang="de" hreflang="de">Deutsche Fassung</a></p>
 
 This policy covers the app The Shed for iPad and Mac and this website, shed.peterkurzok.de. The app is made by Peter
 Kurzok ("we", see [Contact](#contact)).

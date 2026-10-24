@@ -239,6 +239,53 @@ for (const lang of langs) {
   );
 }
 
+// Every page carries the language of its folder
+const wrongLang = htmlFiles
+  .filter((file) => file !== '404.html')
+  .filter((file) => {
+    const folder = langs.find((lang) => lang !== 'en' && file.startsWith(`${lang}/`)) ?? 'en';
+    return !html.get(file).includes(`<html lang="${folder}"`);
+  });
+check(wrongLang.length === 0, 'every page is marked with the language of its folder', wrongLang.join(', '));
+
+// Every link to a page of the site stays in the language; the language link is the exception.
+for (const lang of langs.filter((lang) => lang !== 'en')) {
+  for (const [file, page] of [...html].filter(([file]) => file.startsWith(`${lang}/`))) {
+    const strays = [...page.matchAll(/<a\s[^>]*>/g)]
+      .map(([tag]) => tag)
+      .filter((tag) => !tag.includes('hreflang='))
+      .map((tag) => tag.match(/href="(\/[^"#]*)/)?.[1])
+      .filter((href) => href && !href.startsWith(`/${lang}/`));
+    check(strays.length === 0, `${file} links to /${lang}/… for every page of the site`, `found ${strays.join(', ')}`);
+  }
+}
+
+// hreflang: every page of the sitemap names all its translations and x-default, and each exists
+const paired = [];
+for (const [file, page] of html) {
+  const alternates = [...page.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)];
+  if (alternates.length === 0) continue;
+  const named = alternates.map(([, lang]) => lang);
+  const wanted = [...langs, 'x-default'];
+  const broken = alternates
+    .map(([, , href]) => href)
+    .filter((href) => !href.startsWith(site) || !files.includes(pageFor(href.slice(site.length))));
+  const ok = wanted.every((lang) => named.includes(lang)) && named.length === wanted.length && broken.length === 0;
+  if (ok) paired.push(`/${file.replace(/index\.html$/, '')}`);
+  else fail(`${file}: hreflang links name ${named.join(', ')}${broken.length ? `; no page at ${broken.join(', ')}` : ''}`);
+}
+check(
+  langs.length < 2 || paired.sort().join() === [...pages].sort().join(),
+  `hreflang links pair every page of the sitemap with its translations (${paired.length} pages)`,
+  `pages with hreflang links: ${paired.join(', ') || 'none'}`,
+);
+
+// German prices: "39,99" and a no-break space before the euro sign
+if (langs.includes('de')) {
+  const german = html.get(homeOf('de')) ?? '';
+  check(/39,99(\u00a0|&nbsp;|&#160;)€/.test(german), `${homeOf('de')} prints "39,99 €" with a no-break space`, 'not found');
+}
+
 // 404 page
 const notFound = html.get('404.html') ?? '';
 check(

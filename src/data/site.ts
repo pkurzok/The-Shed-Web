@@ -1,6 +1,7 @@
 // Facts and helpers that do not depend on the language. The texts of a language are in
-// en.ts (and later de.ts); the privacy policies are Markdown in src/pages/. The values to change on
+// en.ts and de.ts; the privacy policies are Markdown in src/pages/. The values to change on
 // launch day are in launch.ts.
+import { de } from './de';
 import { en } from './en';
 import { launchDate, launchOffer, prices, status } from './launch.ts';
 
@@ -19,7 +20,7 @@ export const app = {
 };
 
 export type Lang = 'en' | 'de';
-export const langs: Lang[] = ['en'];
+export const langs: Lang[] = ['en', 'de'];
 
 // The screenshot files are src/assets/images/screenshots/<lang>/<file>.png, imported from the app
 // repository by scripts/import-assets.sh. The order is the order of the homepage: the hero shows
@@ -89,7 +90,7 @@ export type Content = {
   notFound: { title: string; text: string; home: string };
 };
 
-export const content: Record<Lang, Content> = { en } as Record<Lang, Content>;
+export const content: Record<Lang, Content> = { en, de };
 
 // The address of a page in a language: English at the root, every other language in its folder.
 export const localePath = (lang: Lang, path: string) => (lang === 'en' ? path : `/${lang}${path}`);
@@ -102,7 +103,7 @@ export const translatedPath = (path: string, from: Lang, to: Lang) =>
 export const locales: Record<Lang, string> = { en: 'en_GB', de: 'de_DE' };
 
 // The paths the sitemap lists.
-export const pages = ['/', '/privacy/', '/support/'];
+export const pages = ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/'];
 
 // "{n} songs" with n = 3: fills the placeholders of a text.
 export const fill = (text: string, values: Record<string, string | number>) =>
