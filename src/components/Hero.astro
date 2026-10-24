@@ -1,0 +1,24 @@
+---
+import { content, type Lang } from '../data/site';
+import Cta from './Cta.astro';
+import Highlight from './Highlight.astro';
+import Shot from './Shot.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { hero } = content[lang];
+---
+
+<section class="hero" id="hero">
+  <div class="cone" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">{hero.eyebrow}</span>
+    <h1><Highlight title={hero.title} highlight={hero.highlight} /></h1>
+    <p class="hero-subtitle">{hero.subtitle}</p>
+    <Cta lang={lang} />
+    <Shot lang={lang} file="ipad-01-mute" alt={hero.alt} sizes="(max-width: 1012px) 100vw, 980px" eager class="hero-shot" />
+  </div>
+</section>

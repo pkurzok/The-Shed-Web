@@ -1,0 +1,71 @@
+---
+// Free and the three Pro durations, in euros. The launch offer of launch.ts shows while it runs at
+// build time; the site is static, so it disappears with the first build after its end.
+import { app, content, fill, type Lang } from '../data/site';
+import { formatDate, formatPrice, launchOfferActive } from '../lib/launch.ts';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { pricing } = content[lang];
+const { prices, launchOffer } = app;
+const price = (value: number) => formatPrice(lang, value);
+
+const offer = launchOffer && launchOfferActive(launchOffer, new Date()) ? launchOffer : null;
+// endsAt is the first day at the regular price; the text names the last day of the offer.
+const lastDay = offer
+  ? new Date(Date.parse(`${offer.endsAt}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10)
+  : undefined;
+const [beforePrice, afterPrice] = pricing.monthly.once.split('{price}');
+---
+
+<section class="pricing" id="pricing">
+  <div class="container">
+    <h2 class="section-title">{pricing.title}</h2>
+    <ul class="tiers">
+      <li class="tier">
+        <h3>{pricing.free.name}</h3>
+        <p class="price">{price(0)}</p>
+        <ul>
+          {pricing.free.features.map((feature) => <li>{fill(feature, { n: prices.freeSongsPerMonth })}</li>)}
+        </ul>
+      </li>
+      <li class="tier pro">
+        <span class="tag">{fill(pricing.yearly.trial, { n: prices.trialDays })}</span>
+        <h3>{pricing.yearly.name}</h3>
+        <p class="price">{price(prices.yearly)} <small>{pricing.yearly.per}</small></p>
+        <ul>
+          {pricing.yearly.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+      </li>
+      <li class="tier">
+        <h3>{pricing.monthly.name}</h3>
+        <p class="price">{price(prices.monthly)} <small>{pricing.monthly.per}</small></p>
+        <p class="price-once">
+          {beforePrice}
+          {
+            offer ? (
+              <>
+                <span class="visually-hidden">{pricing.launch.regular}</span>
+                <s>{price(prices.lifetime)}</s> <strong>{price(offer.price)}</strong>
+              </>
+            ) : (
+              price(prices.lifetime)
+            )
+          }
+          {afterPrice}
+        </p>
+        {offer && lastDay && <p class="launch">{fill(pricing.launch.until, { date: formatDate(lang, lastDay) })}</p>}
+        <ul>
+          {pricing.monthly.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+      </li>
+    </ul>
+    <div class="pricing-notes">
+      <p>{pricing.note}</p>
+      <p>{pricing.renewal}</p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,28 @@
+---
+// A text next to a screenshot; `flip` puts the screenshot on the left.
+import type { Lang, ScreenshotFile } from '../data/site';
+import Highlight from './Highlight.astro';
+import Shot from './Shot.astro';
+
+interface Props {
+  lang: Lang;
+  kicker: string;
+  title: string;
+  highlight: string;
+  text: string;
+  shot: ScreenshotFile;
+  alt: string;
+  flip?: boolean;
+}
+
+const { lang, kicker, title, highlight, text, shot, alt, flip = false } = Astro.props;
+---
+
+<div class:list={['row', { flip }]}>
+  <div class="row-text">
+    <span class="kicker">{kicker}</span>
+    <h2 class="section-title"><Highlight title={title} highlight={highlight} /></h2>
+    <p>{text}</p>
+  </div>
+  <Shot lang={lang} file={shot} alt={alt} sizes="(max-width: 760px) 100vw, 620px" />
+</div>

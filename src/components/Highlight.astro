@@ -1,0 +1,12 @@
+---
+// A heading text with its highlighted part in amber, e.g. "Mute your <em>part</em>".
+import type { Highlighted } from '../data/site';
+
+type Props = Highlighted;
+
+const { title, highlight } = Astro.props;
+const start = title.indexOf(highlight);
+if (start < 0) throw new Error(`"${highlight}" does not occur in "${title}"`);
+---
+
+{title.slice(0, start)}<em class="highlight">{highlight}</em>{title.slice(start + highlight.length)}

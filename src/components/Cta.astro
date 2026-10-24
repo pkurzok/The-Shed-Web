@@ -1,0 +1,47 @@
+---
+// The call to action, by launch status (src/data/launch.ts): "Coming soon" before the App Store
+// page exists, then the pre-order badge with the launch date, then the download badge.
+import { app, content, fill, type Lang } from '../data/site';
+import { ctaKind, formatDate } from '../lib/launch.ts';
+
+interface Props {
+  lang: Lang;
+  // The small form for the header.
+  compact?: boolean;
+}
+
+const { lang, compact = false } = Astro.props;
+const { cta } = content[lang];
+const kind = ctaKind(app.status);
+const date = app.launchDate ? formatDate(lang, app.launchDate) : undefined;
+---
+
+{
+  compact ? (
+    kind === 'text' ? (
+      <span class="pill">{cta.unreleased.short}</span>
+    ) : (
+      <a href={app.appStoreUrl} class="pill">
+        {kind === 'preorder-badge' ? cta.preorder.short : cta.released.short}
+      </a>
+    )
+  ) : kind === 'text' ? (
+    <div class="cta">
+      <span class="cta-soon">{cta.unreleased.text}</span>
+    </div>
+  ) : kind === 'preorder-badge' ? (
+    <div class="cta">
+      <a href={app.appStoreUrl} class="cta-badge">
+        <img src="/images/app-store-preorder-white.svg" alt={cta.preorder.badgeAlt} width="156" height="52" />
+      </a>
+      {date && <span class="cta-line">{fill(cta.preorder.text, { date })}</span>}
+    </div>
+  ) : (
+    <div class="cta">
+      <a href={app.appStoreUrl} class="cta-badge">
+        <img src="/images/app-store-download-white.svg" alt={cta.released.badgeAlt} width="156" height="52" />
+      </a>
+      <span class="cta-line">{cta.released.text}</span>
+    </div>
+  )
+}

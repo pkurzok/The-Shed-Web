@@ -1,0 +1,21 @@
+---
+import { content, type Lang } from '../data/site';
+import Highlight from './Highlight.astro';
+import Shot from './Shot.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { mac } = content[lang];
+---
+
+<section class="mac" id="mac">
+  <div class="container">
+    <span class="kicker">{mac.kicker}</span>
+    <h2 class="section-title"><Highlight title={mac.title} highlight={mac.highlight} /></h2>
+    <p>{mac.text}</p>
+    <Shot lang={lang} file="mac-01-practice" alt={mac.alt} sizes="(max-width: 1012px) 100vw, 980px" />
+  </div>
+</section>

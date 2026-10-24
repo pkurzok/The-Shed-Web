@@ -1,0 +1,81 @@
+---
+import { Image } from 'astro:assets';
+import appIcon from '../assets/images/app-icon.png';
+import { app, content, localePath, type Lang } from '../data/site';
+import Cta from './Cta.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  // The page's own path; see Base.
+  path?: string;
+  // The same page in the other language, when there is one.
+  language?: { label: string; lang: Lang; href: string };
+}
+
+const { lang, path, language } = Astro.props;
+const { nav, navToggle } = content[lang];
+
+// Section anchors only exist on the homepage; everywhere else they lead back to it.
+const home = localePath(lang, '/');
+const resolve = (href: string) =>
+  href.startsWith('#') ? (path === home ? href : home + href) : localePath(lang, href);
+---
+
+<header class="site-header">
+  <nav class="container" aria-label={app.name}>
+    <a href={home} class="brand">
+      {/* Twice the size of its slot, for high-resolution screens. */}
+      <Image src={appIcon} width={64} height={64} alt="" loading="eager" />
+      <span>{app.name}</span>
+    </a>
+    <div class="nav-end">
+      <div id="site-nav" class="nav-collapse">
+        <ul class="nav-list">
+          {
+            nav.map((entry) => (
+              <li>
+                <a href={resolve(entry.href)} class="nav-link">
+                  {entry.label}
+                </a>
+              </li>
+            ))
+          }
+          {
+            language && (
+              <li>
+                <a href={language.href} class="nav-link" lang={language.lang} hreflang={language.lang}>
+                  {language.label}
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+      <Cta lang={lang} compact />
+      <button type="button" class="nav-toggle" aria-controls="site-nav" aria-expanded="false" aria-label={navToggle}>
+        <Icon name="list" />
+      </button>
+    </div>
+  </nav>
+</header>
+
+<script is:inline>
+  (() => {
+    const toggle = document.querySelector('.nav-toggle');
+    if (!toggle) return;
+    const target = document.getElementById(toggle.getAttribute('aria-controls'));
+    const set = (open) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      target.toggleAttribute('data-open', open);
+    };
+    toggle.addEventListener('click', () => set(toggle.getAttribute('aria-expanded') !== 'true'));
+    // A section link scrolls the page; the open menu would cover the section.
+    target.addEventListener('click', (event) => {
+      if (event.target.closest('a')) set(false);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') set(false);
+    });
+  })();
+</script>

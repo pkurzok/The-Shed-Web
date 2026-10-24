@@ -1,0 +1,35 @@
+---
+// The homepage of one language; src/pages/index.astro and its siblings render it.
+import { content, localePath, screenshots, type Lang } from '../data/site';
+import Base from '../layouts/Base.astro';
+import Facts from './Facts.astro';
+import FeatureGrid from './FeatureGrid.astro';
+import FeatureRow from './FeatureRow.astro';
+import Hero from './Hero.astro';
+import Mac from './Mac.astro';
+import Pricing from './Pricing.astro';
+import Privacy from './Privacy.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { name, description, rows } = content[lang];
+// Screenshots 2 to 5 go with the four rows.
+const rowShots = screenshots.slice(1, 5).map((shot) => shot.file);
+---
+
+<Base lang={lang} title={name} description={description} path={localePath(lang, '/')}>
+  <Hero lang={lang} />
+  <Facts lang={lang} />
+  <section id="features">
+    <div class="container">
+      {rows.map((row, index) => <FeatureRow lang={lang} {...row} shot={rowShots[index]} flip={index % 2 === 1} />)}
+    </div>
+  </section>
+  <Mac lang={lang} />
+  <FeatureGrid lang={lang} />
+  <Privacy lang={lang} />
+  <Pricing lang={lang} />
+</Base>

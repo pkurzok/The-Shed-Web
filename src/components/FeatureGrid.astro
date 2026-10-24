@@ -1,0 +1,27 @@
+---
+import { content, type Lang } from '../data/site';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { grid } = content[Astro.props.lang];
+---
+
+<section class="grid-section" id="more">
+  <div class="container">
+    <h2 class="section-title">{grid.title}</h2>
+    <ul class="grid">
+      {
+        grid.items.map((item) => (
+          <li>
+            <Icon name={item.icon} />
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

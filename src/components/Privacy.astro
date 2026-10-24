@@ -1,0 +1,19 @@
+---
+import { content, localePath, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { privacyBand } = content[lang];
+---
+
+<section class="privacy-band" id="privacy">
+  <div class="container">
+    <span class="eyebrow">{privacyBand.eyebrow}</span>
+    <h2>{privacyBand.title}</h2>
+    <p>{privacyBand.text}</p>
+    <a href={localePath(lang, '/privacy/')}>{privacyBand.link}</a>
+  </div>
+</section>
