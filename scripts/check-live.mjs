@@ -69,11 +69,26 @@ const expectRedirect = async (status, pathname, target) => {
 };
 
 // Pages
-for (const page of ['/', '/de/', '/support/', '/de/support/']) {
+for (const page of ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/']) {
   await expectStatus(200, page, { contentType: 'text/html' });
 }
-await expectStatus(200, '/privacy/', { contentType: 'text/html', contains: email });
-await expectStatus(200, '/de/privacy/', { contentType: 'text/html', contains: email });
+// Cloudflare's Email Address Obfuscation (on for the peterkurzok.de zone, accepted by the author)
+// replaces the address with an encoded /cdn-cgi/l/email-protection link and a decoding script.
+const decodeObfuscated = (html) =>
+  [...html.matchAll(/data-cfemail="([0-9a-f]+)"|email-protection#([0-9a-f]+)/g)].map(([, a, b]) => {
+    const hex = a ?? b;
+    const key = parseInt(hex.slice(0, 2), 16);
+    return hex
+      .slice(2)
+      .match(/../g)
+      .map((pair) => String.fromCharCode(parseInt(pair, 16) ^ key))
+      .join('');
+  });
+for (const page of ['/privacy/', '/de/privacy/', '/support/', '/de/support/']) {
+  const html = await (await get(page)).text();
+  const named = html.includes(email) || decodeObfuscated(html).includes(email);
+  report(named, `${page} names ${email} (plain or obfuscated by Cloudflare)`, 'address missing');
+}
 
 // Technical files
 await expectStatus(200, '/sitemap.xml', { contentType: 'application/xml' });

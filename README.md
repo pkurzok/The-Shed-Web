@@ -132,6 +132,11 @@ npm run check:live -- https://shed.peterkurzok.de
 Redirects, the trailing-slash redirects and the sitemap's content type are the work of Cloudflare Pages, so
 `check:live` reports them as failures against `npm run preview`.
 
+Cloudflare's Email Address Obfuscation is on for the `peterkurzok.de` zone. On `shed.peterkurzok.de` (not on
+`*.pages.dev`) it replaces `shed@peterkurzok.de` with an encoded `/cdn-cgi/l/email-protection` link and injects
+Cloudflare's decoding script; visitors with JavaScript see the address as usual. This is accepted. `check:live`
+decodes the address, so it passes on both hosts.
+
 ### Cloudflare setup (once, by hand)
 
 1. Cloudflare dashboard › Workers & Pages › Create › Pages › Connect to Git › `pkurzok/The-Shed-Web`.
