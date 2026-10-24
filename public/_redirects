@@ -1,0 +1,4 @@
+# The app (Settings, paywall) and every App Store listing link to /datenschutz, in all languages.
+# This address must stay.
+/datenschutz /privacy/ 301
+/datenschutz/ /privacy/ 301

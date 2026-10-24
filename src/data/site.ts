@@ -102,7 +102,7 @@ export const translatedPath = (path: string, from: Lang, to: Lang) =>
 export const locales: Record<Lang, string> = { en: 'en_GB', de: 'de_DE' };
 
 // The paths the sitemap lists.
-export const pages = ['/'];
+export const pages = ['/', '/privacy/', '/support/'];
 
 // "{n} songs" with n = 3: fills the placeholders of a text.
 export const fill = (text: string, values: Record<string, string | number>) =>

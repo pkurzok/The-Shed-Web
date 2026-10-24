@@ -21,16 +21,35 @@ const list = (name) =>
     ([, entry]) => entry,
   );
 const langs = list('langs');
+const pages = list('pages');
 const screenshotFiles = [...siteData.matchAll(/\{ file: '([^']+)', device: '[^']+' \}/g)].map(([, file]) => `${file}.png`);
 const status = launchData.match(/export const status: LaunchStatus = '([a-z]+)'/)?.[1];
 
 const homeOf = (lang) => (lang === 'en' ? 'index.html' : `${lang}/index.html`);
+const pageOf = (lang, page) => `${lang === 'en' ? '' : `${lang}/`}${page}/index.html`;
+const imprint = 'https://apps.peterkurzok.de/imprint/';
+const email = 'shed@peterkurzok.de';
+// Each language has its policy; `title` is the heading the page must carry.
+const policyTitles = { en: 'Privacy Policy', de: 'Datenschutzerklärung' };
+const expectedRedirects = langs.flatMap((lang) => {
+  const prefix = lang === 'en' ? '' : `/${lang}`;
+  return [
+    [`${prefix}/datenschutz`, `${prefix}/privacy/`, '301'],
+    [`${prefix}/datenschutz/`, `${prefix}/privacy/`, '301'],
+  ];
+});
 const badgeFor = { unreleased: null, preorder: 'app-store-preorder-white.svg', released: 'app-store-download-white.svg' };
 const badges = Object.values(badgeFor).filter(Boolean);
 
 const expectedFiles = [
   ...langs.map(homeOf),
+  ...langs.map((lang) => pageOf(lang, 'privacy')),
+  ...langs.map((lang) => pageOf(lang, 'support')),
   '404.html',
+  'sitemap.xml',
+  'robots.txt',
+  '_headers',
+  '_redirects',
   'images/app-icon.png',
   ...badges.map((file) => `images/${file}`),
   ...langs.map((lang) => `images/og/${lang}.png`),
@@ -115,6 +134,81 @@ check(
   `no file above 25 MiB (largest: ${(largest / 1024 / 1024).toFixed(1)} MiB)`,
   files[sizes.indexOf(largest)],
 );
+
+// Redirects: the address the app and the store listings use
+const redirects = files.includes('_redirects')
+  ? (await read('_redirects'))
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'))
+      .map((line) => line.split(/\s+/))
+  : [];
+const redirectSources = redirects.map(([source]) => source);
+const wrongRedirects = expectedRedirects.filter(
+  ([source, target, code]) => !redirects.some((rule) => rule.join(' ') === `${source} ${target} ${code}`),
+);
+check(
+  wrongRedirects.length === 0 && redirects.length === expectedRedirects.length,
+  `_redirects sends /datenschutz to the policy (${expectedRedirects.length} rules, 301) and nothing else`,
+  `found: ${redirects.map((rule) => rule.join(' ')).join('; ') || 'none'}`,
+);
+
+// Internal links
+const pageFor = (pathname) => path.join(pathname, pathname.endsWith('/') ? 'index.html' : '').replace(/^\//, '');
+let links = 0;
+const linkProblems = [];
+for (const [file, page] of html) {
+  for (const [, , target] of page.matchAll(/\s(href|src)="([^"]*)"/g)) {
+    if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) continue; // external or mailto
+    links += 1;
+    const [pathname, fragment] = target.split('?')[0].split('#');
+    if (pathname && !pathname.startsWith('/')) {
+      linkProblems.push(`${file}: "${target}" is not root-relative`);
+      continue;
+    }
+    if (redirectSources.includes(pathname)) continue;
+    const resolved = pathname ? pageFor(pathname) : file;
+    if (!files.includes(resolved)) {
+      const isPage = !path.extname(pathname) && files.includes(pageFor(`${pathname}/`));
+      linkProblems.push(isPage ? `${file}: "${target}" must end with "/"` : `${file}: "${target}" does not resolve`);
+      continue;
+    }
+    if (fragment && !html.get(resolved)?.includes(`id="${fragment}"`)) {
+      linkProblems.push(`${file}: "${target}" points at a missing id`);
+    }
+  }
+}
+linkProblems.forEach(fail);
+if (linkProblems.length === 0) pass(`every local link and image resolves (${links} references)`);
+
+// Privacy policy and support page, once per language
+for (const lang of langs) {
+  const file = pageOf(lang, 'privacy');
+  const policy = html.get(file) ?? '';
+  const title = policyTitles[lang];
+  check(new RegExp(`<h1[^>]*>${title}</h1>`).test(policy), `${file} has the heading "${title}"`, 'missing');
+  const needs = [email, 'https://huggingface.co/privacy', `href="${imprint}"`].filter((needle) => !policy.includes(needle));
+  check(needs.length === 0, `${file} names the contact, Hugging Face's policy and the imprint`, `missing: ${needs.join(', ')}`);
+  const support = html.get(pageOf(lang, 'support')) ?? '';
+  check(support.includes(`href="mailto:${email}"`), `${pageOf(lang, 'support')} links to mailto:${email}`, 'missing');
+  check(
+    support.indexOf(`mailto:${email}`) < support.indexOf('<details'),
+    `${pageOf(lang, 'support')} puts the contact above the questions`,
+    'the order differs',
+  );
+}
+
+// Sitemap and robots
+const sitemap = files.includes('sitemap.xml') ? await read('sitemap.xml') : '';
+const locations = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map(([, location]) => location);
+const sitemapUrls = pages.map((page) => site + page);
+check(
+  locations.length === sitemapUrls.length && sitemapUrls.every((url) => locations.includes(url)),
+  `sitemap.xml lists exactly the ${sitemapUrls.length} pages of site.ts`,
+  `found ${locations.join(', ') || 'none'}`,
+);
+const robots = files.includes('robots.txt') ? await read('robots.txt') : '';
+check(robots.includes(`Sitemap: ${site}/sitemap.xml`), 'robots.txt names the sitemap', 'line missing');
 
 // Homepage, once per language: the call to action matches the launch status
 for (const lang of langs) {

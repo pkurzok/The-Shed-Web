@@ -39,6 +39,14 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
+  /* Short pages keep the footer at the bottom. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
 }
 
 img,

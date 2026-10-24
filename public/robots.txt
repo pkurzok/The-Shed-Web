@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shed.peterkurzok.de/sitemap.xml

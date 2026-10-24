@@ -1,0 +1,38 @@
+---
+// The support page of one language: the contact address first (App Review looks for it), then
+// the questions, as <details> without JavaScript.
+import { app, content, localePath, type Lang } from '../data/site';
+import Base from '../layouts/Base.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { support } = content[lang];
+---
+
+<Base lang={lang} title={`${support.title} - ${app.name}`} description={support.description} path={localePath(lang, '/support/')}>
+  <div class="prose-page">
+    <div class="container">
+      <article class="prose">
+        <h1>{support.title}</h1>
+        <div class="contact">
+          <p class="lead">{support.intro} <a href={`mailto:${app.email}`}>{app.email}</a></p>
+          <p>{support.hint}</p>
+        </div>
+        <h2>{support.faqTitle}</h2>
+        <div class="faq">
+          {
+            support.faq.map((entry) => (
+              <details>
+                <summary>{entry.question}</summary>
+                <div set:html={entry.answer} />
+              </details>
+            ))
+          }
+        </div>
+      </article>
+    </div>
+  </div>
+</Base>
