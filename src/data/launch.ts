@@ -5,10 +5,10 @@ export type LaunchStatus = 'unreleased' | 'preorder' | 'released';
 
 // unreleased: no App Store link, "Coming soon". preorder: pre-order badge and launchDate.
 // released: download badge.
-export const status: LaunchStatus = 'unreleased';
+export const status: LaunchStatus = 'preorder';
 
 // 'YYYY-MM-DD', shown as "Arrives on …" while status is 'preorder'.
-export const launchDate: string | null = null;
+export const launchDate: string | null = '2026-12-07';
 
 // Euro prices of the German App Store, incl. VAT. Change them together with App Store Connect.
 export const prices = {
