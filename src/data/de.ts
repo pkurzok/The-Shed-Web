@@ -112,7 +112,7 @@ export const de: Content = {
       once: 'oder einmalig {price}, ohne Abo',
       features: ['Alles aus Pro', 'Monatlich: jederzeit kündbar'],
     },
-    launch: { until: 'Launch-Preis bis {date}', regular: 'Regulärer Preis' },
+    launch: { until: 'Einführungspreis bis {date}', regular: 'Regulärer Preis' },
     note: 'Preise in Euro inklusive deutscher Mehrwertsteuer. Der App Store zeigt den Preis für dein Land.',
     renewal:
       'Abos verlängern sich automatisch, wenn du sie nicht mindestens 24 Stunden vor Ende des Zeitraums kündigst. Die Zahlung läuft über deinen Apple Account. Verwalten und kündigen kannst du in den Einstellungen deines App-Store-Kontos.',

@@ -23,4 +23,4 @@ export type LaunchOffer = { price: number; endsAt: string };
 
 // The lifetime launch price. endsAt is 'YYYY-MM-DD', the first day at the regular price (UTC).
 // The site is static: the offer disappears only with the next build after endsAt.
-export const launchOffer: LaunchOffer | null = null;
+export const launchOffer: LaunchOffer | null = { price: 69.99, endsAt: '2027-01-11' };
