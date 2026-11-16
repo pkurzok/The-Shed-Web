@@ -4,3 +4,12 @@
 /datenschutz/ /privacy/ 301
 /de/datenschutz /de/privacy/ 301
 /de/datenschutz/ /de/privacy/ 301
+# The press page's screenshot ZIPs live in the GitHub release "press-kit" (Cloudflare Pages rejects files over
+# 25 MiB); `make press-kit RELEASE=1` in the app repo replaces them.
+/press/the-shed-screenshots-en.zip https://github.com/pkurzok/The-Shed-Web/releases/download/press-kit/the-shed-screenshots-en.zip 302
+/press/the-shed-screenshots-de.zip https://github.com/pkurzok/The-Shed-Web/releases/download/press-kit/the-shed-screenshots-de.zip 302
+# The German word for the press page.
+/presse /de/press/ 301
+/presse/ /de/press/ 301
+/de/presse /de/press/ 301
+/de/presse/ /de/press/ 301

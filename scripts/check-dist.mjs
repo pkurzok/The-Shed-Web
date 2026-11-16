@@ -10,7 +10,14 @@ const sizeLimit = 25 * 1024 * 1024; // Cloudflare Pages rejects larger files.
 const site = 'https://shed.peterkurzok.de';
 
 // Outbound links the pages may carry; everything they load comes from the site itself.
-const outboundHosts = ['apps.apple.com', 'www.apple.com', 'apps.peterkurzok.de', 'huggingface.co', 'www.cloudflare.com'];
+const outboundHosts = [
+  'apps.apple.com',
+  'www.apple.com',
+  'apps.peterkurzok.de',
+  'huggingface.co',
+  'www.cloudflare.com',
+  'testflight.apple.com',
+];
 
 // The lists of src/data/site.ts and the launch status of src/data/launch.ts, read from the source
 // so that this script needs no build step.
@@ -31,13 +38,23 @@ const imprint = 'https://apps.peterkurzok.de/imprint/';
 const email = 'shed@peterkurzok.de';
 // Each language has its policy; `title` is the heading the page must carry.
 const policyTitles = { en: 'Privacy Policy', de: 'Datenschutzerklärung' };
-const expectedRedirects = langs.flatMap((lang) => {
-  const prefix = lang === 'en' ? '' : `/${lang}`;
-  return [
-    [`${prefix}/datenschutz`, `${prefix}/privacy/`, '301'],
-    [`${prefix}/datenschutz/`, `${prefix}/privacy/`, '301'],
-  ];
-});
+// The press page's screenshot ZIPs are assets of this GitHub release (too large for Cloudflare Pages).
+const pressRelease = 'https://github.com/pkurzok/The-Shed-Web/releases/download/press-kit';
+const pressZip = (lang) => `/press/the-shed-screenshots-${lang}.zip`;
+const pressVideo = 'press/the-shed-promo.mp4';
+const pressPoster = 'press/the-shed-promo-poster.jpg';
+const expectedRedirects = [
+  ...langs.flatMap((lang) => {
+    const prefix = lang === 'en' ? '' : `/${lang}`;
+    return [
+      [`${prefix}/datenschutz`, `${prefix}/privacy/`, '301'],
+      [`${prefix}/datenschutz/`, `${prefix}/privacy/`, '301'],
+    ];
+  }),
+  ...langs.map((lang) => [pressZip(lang), `${pressRelease}${pressZip(lang).slice('/press'.length)}`, '302']),
+  // The German word for the press page.
+  ...['/presse', '/presse/', '/de/presse', '/de/presse/'].map((source) => [source, '/de/press/', '301']),
+];
 const badgeFor = { unreleased: null, preorder: 'app-store-preorder-white.svg', released: 'app-store-download-white.svg' };
 const badges = Object.values(badgeFor).filter(Boolean);
 
@@ -45,6 +62,9 @@ const expectedFiles = [
   ...langs.map(homeOf),
   ...langs.map((lang) => pageOf(lang, 'privacy')),
   ...langs.map((lang) => pageOf(lang, 'support')),
+  ...langs.map((lang) => pageOf(lang, 'press')),
+  pressVideo,
+  pressPoster,
   '404.html',
   'sitemap.xml',
   'robots.txt',
@@ -149,7 +169,7 @@ const wrongRedirects = expectedRedirects.filter(
 );
 check(
   wrongRedirects.length === 0 && redirects.length === expectedRedirects.length,
-  `_redirects sends /datenschutz to the policy (${expectedRedirects.length} rules, 301) and nothing else`,
+  `_redirects sends /datenschutz to the policy, the press ZIPs to the release and /presse to the press page (${expectedRedirects.length} rules) and nothing else`,
   `found: ${redirects.map((rule) => rule.join(' ')).join('; ') || 'none'}`,
 );
 
@@ -239,6 +259,26 @@ for (const lang of langs) {
   );
 }
 
+// Press page, once per language: the links of the pitch mails and the downloads
+const testFlight = 'https://testflight.apple.com/join/FhJSGYtg';
+const campaignLink = 'https://apps.apple.com/app/apple-store/id6825513490?pt=496588&amp;ct=press-kit&amp;mt=8';
+for (const lang of langs) {
+  const file = pageOf(lang, 'press');
+  const page = html.get(file) ?? '';
+  const needs = [
+    ...(status === 'released' ? [] : [`href="${testFlight}"`]),
+    ...(status === 'unreleased' ? [] : [`href="${campaignLink}"`]),
+    'href="/images/app-icon.png"',
+    `href="${pressZip(lang)}"`,
+    `src="/${pressVideo}"`,
+    `poster="/${pressPoster}"`,
+    `href="mailto:${email}"`,
+  ].filter((needle) => !page.includes(needle));
+  check(needs.length === 0, `${file} links TestFlight, the press-kit campaign link, icon, ZIP, video and contact`, `missing: ${needs.join(', ')}`);
+  const shots = [...page.matchAll(/data-shot="([^"]+)"/g)].map(([, shot]) => shot);
+  check(shots.length === screenshotFiles.length && shots.every((shot) => shot.startsWith(`${lang}/`)), `${file} shows the ${screenshotFiles.length} screenshots of its language`, `found ${shots.join(', ') || 'none'}`);
+}
+
 // Every page carries the language of its folder
 const wrongLang = htmlFiles
   .filter((file) => file !== '404.html')
@@ -255,7 +295,8 @@ for (const lang of langs.filter((lang) => lang !== 'en')) {
       .map(([tag]) => tag)
       .filter((tag) => !tag.includes('hreflang='))
       .map((tag) => tag.match(/href="(\/[^"#]*)/)?.[1])
-      .filter((href) => href && !href.startsWith(`/${lang}/`));
+      // Files (/images/…, /press/….zip) exist once for all languages.
+      .filter((href) => href && !href.startsWith(`/${lang}/`) && !path.extname(href));
     check(strays.length === 0, `${file} links to /${lang}/… for every page of the site`, `found ${strays.join(', ')}`);
   }
 }

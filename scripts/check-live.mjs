@@ -69,7 +69,7 @@ const expectRedirect = async (status, pathname, target) => {
 };
 
 // Pages
-for (const page of ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/']) {
+for (const page of ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/', '/press/', '/de/press/']) {
   await expectStatus(200, page, { contentType: 'text/html' });
 }
 // Cloudflare's Email Address Obfuscation (on for the peterkurzok.de zone, accepted by the author)
@@ -84,7 +84,7 @@ const decodeObfuscated = (html) =>
       .map((pair) => String.fromCharCode(parseInt(pair, 16) ^ key))
       .join('');
   });
-for (const page of ['/privacy/', '/de/privacy/', '/support/', '/de/support/']) {
+for (const page of ['/privacy/', '/de/privacy/', '/support/', '/de/support/', '/press/', '/de/press/']) {
   const html = await (await get(page)).text();
   const named = html.includes(email) || decodeObfuscated(html).includes(email);
   report(named, `${page} names ${email} (plain or obfuscated by Cloudflare)`, 'address missing');
@@ -103,8 +103,12 @@ for (const image of images) {
   await expectStatus(200, `/images/${image}`, { body: await readFile(path.join(imageSource, image)) });
 }
 
+// The press page's video and poster, copied into public/press/ by `make press-kit SITE=…` in the app repo
+await expectStatus(200, '/press/the-shed-promo.mp4', { contentType: 'video/mp4' });
+await expectStatus(200, '/press/the-shed-promo-poster.jpg', { contentType: 'image/jpeg' });
+
 // Trailing-slash forms (Cloudflare Pages answers 308)
-for (const page of ['/privacy', '/support', '/de', '/de/privacy', '/de/support']) {
+for (const page of ['/privacy', '/support', '/press', '/de', '/de/privacy', '/de/support', '/de/press']) {
   await expectRedirect(308, page, `${page}/`);
 }
 
@@ -113,6 +117,17 @@ await expectRedirect(301, '/datenschutz', '/privacy/');
 await expectRedirect(301, '/datenschutz/', '/privacy/');
 await expectRedirect(301, '/de/datenschutz', '/de/privacy/');
 await expectRedirect(301, '/de/datenschutz/', '/de/privacy/');
+
+// The press page's screenshot ZIPs, assets of the GitHub release "press-kit"
+for (const lang of ['en', 'de']) {
+  const zip = `the-shed-screenshots-${lang}.zip`;
+  await expectRedirect(302, `/press/${zip}`, `https://github.com/pkurzok/The-Shed-Web/releases/download/press-kit/${zip}`);
+}
+
+// The German word for the press page
+for (const source of ['/presse', '/presse/', '/de/presse', '/de/presse/']) {
+  await expectRedirect(301, source, '/de/press/');
+}
 
 // Unknown paths. Cloudflare's edge may serve a cached answer; the query string asks the
 // deployment itself.

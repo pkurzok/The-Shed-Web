@@ -1,6 +1,6 @@
 # The Shed website
 
-The source of <https://shed.peterkurzok.de>: the homepage, the privacy policy and the support page of
+The source of <https://shed.peterkurzok.de>: the homepage, the privacy policy, the support page and the press page of
 [The Shed](https://shed.peterkurzok.de), an iPad and Mac app for band practice, in English at `/` and in German at
 `/de/`. It is an [Astro](https://astro.build) project that builds to static files; this repository is the only source
 of the site. The app itself lives in a separate repository ("The Shed").
@@ -29,12 +29,14 @@ missing or a page would load something from another host.
 
 | Content | File |
 |---|---|
-| Every text of the homepage, support page, navigation and footer | `src/data/en.ts`, `src/data/de.ts` |
+| Every text of the homepage, support page, press page, navigation and footer | `src/data/en.ts`, `src/data/de.ts` |
 | App facts, languages, screenshot list, sitemap pages, the `Content` type | `src/data/site.ts` |
 | Launch status, launch date, prices, launch offer | `src/data/launch.ts` |
 | Launch logic (call to action, offer, price and date format) and its tests | `src/lib/launch.ts`, `src/lib/launch.test.ts` |
 | Privacy policy | `src/pages/privacy.md`, `src/pages/de/privacy.md` |
 | Support page (contact first, then the questions) | `src/components/Support.astro`; questions in the language files |
+| Press page (facts, story, video, screenshots, downloads, contact) | `src/components/Press.astro`; texts under `press` in the language files |
+| Promo video and its poster for the press page | `public/press/` (from the app repository, see Images) |
 | Redirects, response headers, `robots.txt` | `public/_redirects`, `public/_headers`, `public/robots.txt` |
 | 404 page | `src/pages/404.astro` |
 | Markup of a homepage section | `src/components/` (`Hero`, `Facts`, `FeatureRow`, `Mac`, `FeatureGrid`, `Privacy`, `Pricing`) |
@@ -94,6 +96,24 @@ It reads `design/screenshots/raw/{ipad,mac}/{en,de}/`, `store/build/screenshots/
 repository. It uses `sips` and `qlmanage`, both part of macOS.
 
 No file above 25 MiB may enter the build: Cloudflare Pages rejects it. `npm run check` fails for such a file.
+
+### Press kit
+
+The press page (`/press/`, `/de/press/`) shows the screenshots above and offers three downloads, all built by
+`scripts/press-kit.sh` in the app repository:
+
+```sh
+# in the app repository
+make press-kit SITE="$HOME/ws-privat/The-Shed-Web"   # video and poster into public/press/
+make press-kit RELEASE=1                              # screenshot ZIPs to the GitHub release (public at once)
+```
+
+- `public/press/the-shed-promo.mp4` and `the-shed-promo-poster.jpg`: the promo video (pre-order cut, portrait) and a
+  frame of it. They are files of the site because a `<video>` may load only from the site itself.
+- `/press/the-shed-screenshots-{en,de}.zip`: the icon, the captioned store screenshots and the uncaptioned device shots
+  of iPad and Mac in one language. They are too large for Cloudflare Pages, so they are assets of the release
+  `press-kit` of this repository, and `public/_redirects` sends the addresses there (302).
+- The app icon links `/images/app-icon.png`.
 
 ## Prices and launch states
 
@@ -157,12 +177,15 @@ push does not bring the problem back.
 ## Launch day
 
 1. When pre-orders open: set `status` to `'preorder'` and `launchDate` to the release day (`'YYYY-MM-DD'`).
-   On release: set `status` to `'released'`.
-2. If the launch price runs: set `launchOffer` to `{ price: 69.99, endsAt: '<first day at the regular price>' }`,
+   On release: set `status` to `'released'`. The press page changes its lead with `status` and drops the TestFlight
+   link by itself.
+2. On release, swap the press video for the "out now" cut: `make press-kit CUT=out-now SITE="$HOME/ws-privat/The-Shed-Web"`
+   in the app repository.
+3. If the launch price runs: set `launchOffer` to `{ price: 69.99, endsAt: '<first day at the regular price>' }`,
    matching the price schedule in App Store Connect and `LaunchOffer.current` in the app.
-3. `npm run check`, commit, push to `main`.
-4. `npm run check:live -- https://shed.peterkurzok.de`.
-5. Put a calendar reminder on `endsAt`: push once that day (any commit, or remove `launchOffer`), because the offer
+4. `npm run check`, commit, push to `main`.
+5. `npm run check:live -- https://shed.peterkurzok.de`.
+6. Put a calendar reminder on `endsAt`: push once that day (any commit, or remove `launchOffer`), because the offer
    only disappears with a rebuild.
 
 ## URL contract
@@ -172,11 +195,14 @@ every line.
 
 | Address | Answer |
 |---|---|
-| `/`, `/de/`, `/privacy/`, `/de/privacy/`, `/support/`, `/de/support/` | 200 |
-| `/privacy`, `/support`, `/de`, `/de/privacy`, `/de/support` (every address without a trailing slash) | 308 to the form with a trailing slash |
+| `/`, `/de/`, `/privacy/`, `/de/privacy/`, `/support/`, `/de/support/`, `/press/`, `/de/press/` | 200 |
+| `/privacy`, `/support`, `/press`, `/de`, `/de/privacy`, `/de/support`, `/de/press` (every address without a trailing slash) | 308 to the form with a trailing slash |
 | `/datenschutz`, `/datenschutz/` | 301 to `/privacy/` (the app and every store locale link here) |
 | `/de/datenschutz`, `/de/datenschutz/` | 301 to `/de/privacy/` |
 | `/images/…` | 200, the bytes of `src/assets/images/…` |
+| `/press/the-shed-promo.mp4`, `/press/the-shed-promo-poster.jpg` | 200 (the press mails and the press page link them) |
+| `/press/the-shed-screenshots-en.zip`, `/press/the-shed-screenshots-de.zip` | 302 to the asset of the GitHub release `press-kit` |
+| `/presse`, `/presse/`, `/de/presse`, `/de/presse/` | 301 to `/de/press/` |
 | `/sitemap.xml`, `/robots.txt` | 200 |
 | any other address | 404 with the 404 page |
 

@@ -1,0 +1,140 @@
+---
+// The press page of one language: lead with the App Store and TestFlight links, the app in one sentence and one
+// paragraph, facts, the story, the promo video, the screenshots, downloads and the contact. The video and its poster
+// are public/press/ (written by `make press-kit SITE=…` in the app repository); the screenshot ZIPs are redirects to
+// the GitHub release "press-kit" (public/_redirects).
+import { app, content, fill, localePath, screenshots, type Lang } from '../data/site';
+import Base from '../layouts/Base.astro';
+import Shot from './Shot.astro';
+import { ctaKind, formatDate, formatPrice, launchOfferActive } from '../lib/launch.ts';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { press, hero, rows, mac, cta } = content[lang];
+const { prices, launchOffer } = app;
+const price = (value: number) => formatPrice(lang, value);
+const kind = ctaKind(app.status);
+const date = app.launchDate ? formatDate(lang, app.launchDate) : '';
+
+// The launch offer as on the pricing section: shown while it runs at build time.
+const offer = launchOffer && launchOfferActive(launchOffer, new Date()) ? launchOffer : null;
+const lastDay = offer
+  ? new Date(Date.parse(`${offer.endsAt}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10)
+  : undefined;
+const lifetime =
+  offer && lastDay
+    ? fill(press.launchLifetime, {
+        price: price(offer.price),
+        regular: price(prices.lifetime),
+        date: formatDate(lang, lastDay),
+      })
+    : price(prices.lifetime);
+const values = { date, monthly: price(prices.monthly), yearly: price(prices.yearly), lifetime };
+// The launch date is a fact only while there is one.
+const facts = press.facts.filter((fact) => date || !fact.value.includes('{date}'));
+
+// The alt texts of the homepage, in the order of the screenshot list.
+const alts = [hero.alt, ...rows.map((row) => row.alt), mac.alt];
+
+const video = '/press/the-shed-promo.mp4';
+const poster = '/press/the-shed-promo-poster.jpg';
+const zip = `/press/the-shed-screenshots-${lang}.zip`;
+---
+
+<Base lang={lang} title={`${press.title} - ${app.name}`} description={press.description} path={localePath(lang, '/press/')}>
+  <div class="press">
+    <div class="container">
+      <header class="press-head">
+        <h1>{press.title}</h1>
+        <p class="press-lead">{fill(press.lead[app.status], { date })}</p>
+        <div class="press-links">
+          {
+            kind !== 'text' && (
+              <a href={app.pressAppStoreUrl} class="cta-badge">
+                {kind === 'preorder-badge' ? (
+                  <img src="/images/app-store-preorder-white.svg" alt={cta.preorder.badgeAlt} width="156" height="52" />
+                ) : (
+                  <img src="/images/app-store-download-white.svg" alt={cta.released.badgeAlt} width="156" height="52" />
+                )}
+              </a>
+            )
+          }
+          {
+            app.status !== 'released' && (
+              <a href={app.testFlightUrl} class="press-beta">
+                {press.testFlight} →
+              </a>
+            )
+          }
+        </div>
+      </header>
+
+      <section class="press-block">
+        <dl class="press-summary">
+          <dt>{press.oneSentence.label}</dt>
+          <dd class="press-sentence">{press.oneSentence.text}</dd>
+          <dt>{press.oneParagraph.label}</dt>
+          <dd>{press.oneParagraph.text}</dd>
+        </dl>
+      </section>
+
+      <section class="press-block" aria-labelledby="press-facts">
+        <h2 id="press-facts">{press.factsTitle}</h2>
+        <dl class="press-facts">
+          {
+            facts.map((fact) => (
+              <div>
+                <dt>{fact.label}</dt>
+                <dd>{fill(fact.value, values)}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </section>
+
+      <section class="press-block press-prose" aria-labelledby="press-story">
+        <h2 id="press-story">{press.storyTitle}</h2>
+        {press.story.map((paragraph) => <p>{paragraph}</p>)}
+      </section>
+
+      <section class="press-block" aria-labelledby="press-video">
+        <h2 id="press-video">{press.videoTitle}</h2>
+        <div class="press-video">
+          <video controls preload="none" playsinline poster={poster} width="1080" height="1920" aria-label={press.videoLabel}>
+            <source src={video} type="video/mp4" />
+          </video>
+          <a href={video} download>{press.videoDownload}</a>
+        </div>
+      </section>
+
+      <section class="press-block" aria-labelledby="press-shots">
+        <h2 id="press-shots">{press.screenshotsTitle}</h2>
+        <ul class="press-shots">
+          {
+            screenshots.map((shot, index) => (
+              <li>
+                <Shot lang={lang} file={shot.file} alt={alts[index]} sizes="(max-width: 760px) 100vw, 360px" />
+              </li>
+            ))
+          }
+        </ul>
+        <h3>{press.downloadsTitle}</h3>
+        <ul class="press-downloads">
+          <li><a href="/images/app-icon.png" download="the-shed-icon-1024.png">{press.iconDownload}</a></li>
+          <li><a href={zip}>{press.zipDownload}</a></li>
+        </ul>
+      </section>
+
+      <section class="press-block" aria-labelledby="press-contact">
+        <h2 id="press-contact">{press.contactTitle}</h2>
+        <div class="contact">
+          <p class="press-sentence">{press.contactIntro} <a href={`mailto:${app.email}`}>{app.email}</a></p>
+          <p>{press.contactHint}</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</Base>

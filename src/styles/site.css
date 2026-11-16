@@ -849,6 +849,150 @@ span.pill {
   padding: 0 0 12px 20px;
 }
 
+/* ---------- Press page ---------- */
+
+.press {
+  padding-block: 48px 80px;
+}
+
+.press h1 {
+  font-family: var(--font-display);
+  font-stretch: 108%;
+  font-weight: 900;
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: 0 0 18px;
+}
+
+.press h2 {
+  font-family: var(--font-display);
+  font-stretch: 105%;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.015em;
+  margin: 0 0 16px;
+}
+
+.press h3 {
+  font-size: 17px;
+  margin: 32px 0 10px;
+}
+
+.press-lead {
+  font-size: 19px;
+  max-width: 60ch;
+  margin: 0 0 20px;
+}
+
+.press-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+.press-beta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  text-underline-offset: 2px;
+}
+
+.press-block {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.press-summary {
+  margin: 0;
+  max-width: 75ch;
+}
+
+.press-summary dt,
+.press-facts dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.press-summary dd {
+  margin: 0 0 24px;
+  color: color-mix(in srgb, var(--text) 86%, var(--muted));
+}
+
+.press-summary dd:last-child {
+  margin-bottom: 0;
+}
+
+.press .press-sentence {
+  font-size: 19px;
+  color: var(--text);
+}
+
+.press-facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 40px;
+  margin: 0;
+}
+
+.press-facts dd {
+  margin: 0;
+}
+
+.press-prose p {
+  max-width: 70ch;
+  margin: 0 0 14px;
+  color: color-mix(in srgb, var(--text) 86%, var(--muted));
+}
+
+.press-video {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.press-video video {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: min(640px, 80vh);
+  aspect-ratio: 9 / 16;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.press-shots {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.press-downloads {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.press-downloads li + li {
+  margin-top: 6px;
+}
+
+.press-downloads a,
+.press-video a {
+  text-underline-offset: 2px;
+}
+
 /* ---------- Phone width ---------- */
 
 @media (max-width: 760px) {
@@ -880,7 +1024,9 @@ span.pill {
   }
 
   .tiers,
-  .grid {
+  .grid,
+  .press-facts,
+  .press-shots {
     grid-template-columns: 1fr;
   }
 

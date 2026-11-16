@@ -3,7 +3,7 @@
 // launch day are in launch.ts.
 import { de } from './de';
 import { en } from './en';
-import { launchDate, launchOffer, prices, status } from './launch.ts';
+import { launchDate, launchOffer, prices, status, type LaunchStatus } from './launch.ts';
 
 export const app = {
   // What og:site_name prints and what page titles end with.
@@ -12,6 +12,10 @@ export const app = {
   email: 'shed@peterkurzok.de',
   appStoreId: '6825513490',
   appStoreUrl: 'https://apps.apple.com/app/id6825513490',
+  // The App Store link of the press page, with the campaign token press-kit (App Store Connect, provider 496588).
+  pressAppStoreUrl: 'https://apps.apple.com/app/apple-store/id6825513490?pt=496588&ct=press-kit&mt=8',
+  // The public beta, linked from the press page until the release.
+  testFlightUrl: 'https://testflight.apple.com/join/FhJSGYtg',
   imprintUrl: 'https://apps.peterkurzok.de/imprint/',
   status,
   launchDate,
@@ -86,6 +90,36 @@ export type Content = {
     // Answers are HTML.
     faq: { question: string; answer: string }[];
   };
+  press: {
+    title: string;
+    description: string;
+    // By launch status; {date} is launchDate.
+    lead: Record<LaunchStatus, string>;
+    // Shown until the release.
+    testFlight: string;
+    oneSentence: { label: string; text: string };
+    oneParagraph: { label: string; text: string };
+    factsTitle: string;
+    // {date} is launchDate; {monthly}, {yearly}, {lifetime} are the prices, {lifetime} with the launch offer while
+    // it runs (`launchLifetime`).
+    facts: { label: string; value: string }[];
+    // {price} is the launch price, {regular} the lifetime price, {date} the last day of the offer.
+    launchLifetime: string;
+    storyTitle: string;
+    // Paragraphs.
+    story: string[];
+    videoTitle: string;
+    videoLabel: string;
+    videoDownload: string;
+    screenshotsTitle: string;
+    downloadsTitle: string;
+    iconDownload: string;
+    zipDownload: string;
+    contactTitle: string;
+    // The address follows `contactIntro`.
+    contactIntro: string;
+    contactHint: string;
+  };
   footer: { copyright: string; links: { label: string; href: string }[] };
   notFound: { title: string; text: string; home: string };
 };
@@ -103,7 +137,7 @@ export const translatedPath = (path: string, from: Lang, to: Lang) =>
 export const locales: Record<Lang, string> = { en: 'en_GB', de: 'de_DE' };
 
 // The paths the sitemap lists.
-export const pages = ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/'];
+export const pages = ['/', '/de/', '/privacy/', '/de/privacy/', '/support/', '/de/support/', '/press/', '/de/press/'];
 
 // "{n} songs" with n = 3: fills the placeholders of a text.
 export const fill = (text: string, values: Record<string, string | number>) =>
